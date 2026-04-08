@@ -69,13 +69,13 @@ base_match <- base %>%
       # White Plains 
       (cpuma0010 %in% c(678) & statefip == 36) ~ "White Plains",
       # Hempstead (Nassau County)
-      cpuma0010 %in% c(684, 685, 689) ~ "Hempstead",
+      (cpuma0010 %in% c(684, 685, 689) & statefip == 36) ~ "Hempstead",
       # Brookhaven (Suffolk County)
-      cpuma0010 %in% c(695, 696, 697) ~ "Brookhaven",
+      (cpuma0010 %in% c(695, 696, 697) & statefip == 36) ~ "Brookhaven",
       # Schenectady
-      cpuma0010 %in% c(658) ~ "Schenectady",
+      (cpuma0010 %in% c(658) & statefip == 36) ~ "Schenectady",
       # Utica (Oneida County)
-      cpuma0010 %in% c(636) ~ "Utica", # this seems wrong, maybe use 2000 or 2010 puma!
+      (cpuma0010 %in% c(636) & statefip == 36) ~ "Utica", # this seems wrong, maybe use 2000 or 2010 puma!
       # Other PUMAs are not assigned
       TRUE ~ NA_character_
     )
@@ -91,7 +91,7 @@ base_match %>%
 
 # check puma to city mapping explicitly
 puma_city_map <- base_match %>%
-  count(cpuma0010, treated_city, wt = perwt, sort = TRUE)
+  count(statefip, cpuma0010, treated_city, wt = perwt, sort = TRUE)
 
 rm(puma_city_map)
 
