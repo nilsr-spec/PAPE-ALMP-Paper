@@ -173,9 +173,9 @@ puma_employment <- base_match %>%
 base_match <- base_match %>%
   left_join(puma_employment, by = c("cpuma0010", "year"))
 
-# checking that it was merged correctly (only one unique value per year per puma)
+# checking that it was merged correctly (only one unique value per puma)
 base_match %>%
-  group_by(cpuma0010, year) %>%
+  group_by(cpuma0010) %>%
   summarise(
     n_distinct_values = n_distinct(puma_mean_inctot),
     .groups = "drop"
