@@ -20,13 +20,13 @@ library(fixest)
 library(janitor)
 library(MatchIt)
 
-base <- readRDS("data/clean/base.rds")
+base <- readRDS("~/PAPE-ALMP-Paper/data/clean/base.rds")
   
 ##################################################
 # 01. Generate baseline target-group subset, incl. matching covariates
 ##################################################
 
-# count PUMA areas in new york state (123 PUMA areas in all years)
+# count PUMA areas in New York state (123 PUMA areas in all years)
 base %>%
   filter(statefip == 36) %>%
   group_by(year) %>%
@@ -104,9 +104,83 @@ base_match <- base_match %>%
     TRUE ~ 0
   ))
 
-######
-###### CONTINUE HERE: MUST CALCULATE (+ MERGE IN) PRE-TREAT (i.e. pre-2012) CPUMA LEVEL COVARIATES + OUTCOME TRENDS
-######
+####calculate pre-2012 CPUMA level covariates
+
+#checking values for different variables
+attributes (base$hispand)
+table (base$hispand)
+attributes (base$school)
+attributes (base$citizen)
+table (base$citizen)
+attributes (base$sex)
+attributes (base$labforce)
+attributes (base$languaged)
+attributes (base$speakeng)
+attributes (base$raced)
+attributes (base$educd)
+table (base$educd)
+attributes (base$occ2010)
+
+#create binary variables to calculate shares
+base_match <- base_match %>%
+  mutate (
+    hispanic = as.integer(hispand > 0),
+    female = case_when(
+      sex == 1 ~ 0, #men 
+      sex == 2 ~ 1, #women
+      TRUE ~ NA_integer_),
+    not_citizen = case_when (
+      citizen == 3 | citizen == 4 ~ 1, #not a citizen
+      citizen == 1 | citizen == 2 ~ 0, #citizen
+      TRUE ~ NA_integer_),
+    active = case_when(
+      labforce == 2 ~ 1, #in the labour market 
+      labforce == 1 ~ 0, #iinactive 
+      TRUE ~ NA_integer_),
+    english = case_when (
+      speakeng %in% c(2,3, 4, 5, 6) ~ 1, # 1 if they speak English
+      speakeng == 1 ~ 0, # 0 if they don't
+      TRUE ~ NA_integer_)
+  )
+
+#creating a new dataset with puma-level variables - IN PROGRESS
+
+puma_covs <- base_match %>% filter (post == 0) %>% #filtering for pre-treatment
+  group_by(cpuma0010) %>%
+  summarise(
+#weighted means for continuous variables
+    across(c (inctot, incwage),
+      ~ weighted.mean(.x, w = perwt, na.rm = TRUE),
+      .names = "puma_mean_{.col}"),
+#shares for binary variables
+    across (c (female, hispanic, not_citizen, active, english),
+      ~ weighted.mean(.x, w = perwt, na.rm = TRUE),
+      .names = "puma_share_{.col}"),
+    .groups = "drop")
+
+#######remaining variables to do: raced, educd, occ2010 -> shares, employed -> trend 
+#######
+
+base_match <- base_match %>% left_join (puma_covs, by = "cpuma0010")
+
+#creating outcome by puma by year
+
+puma_employment <- base_match %>%
+  group_by (cpuma0010, year) %>% 
+  summarise (puma_empl_rate = weighted.mean(employed, w = perwt, na.rm = TRUE),
+             .groups = "drop")
+
+base_match <- base_match %>%
+  left_join(puma_employment, by = c("cpuma0010", "year"))
+
+# checking that it was merged correctly (only one unique value per year per puma)
+base_match %>%
+  group_by(cpuma0010, year) %>%
+  summarise(
+    n_distinct_values = n_distinct(puma_mean_inctot),
+    .groups = "drop"
+  ) %>%
+  filter(n_distinct_values != 1)
 
 # save
 # saveRDS(base_match, "data/clean/base_match.rds")
