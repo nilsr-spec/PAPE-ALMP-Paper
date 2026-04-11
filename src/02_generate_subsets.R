@@ -117,6 +117,7 @@ attributes (base$labforce)
 attributes (base$languaged)
 attributes (base$speakeng)
 attributes (base$raced)
+table (base$raced)
 attributes (base$educd)
 table (base$educd)
 attributes (base$occ2010)
@@ -124,6 +125,14 @@ attributes (base$occ2010)
 #create binary variables to calculate shares
 base_match <- base_match %>%
   mutate (
+    black = case_when (
+      raced %in% c(100:177, 300:827, 850:990) ~ 0,
+      raced %in% c(200:234, 830:845) ~ 1,
+      TRUE ~ NA_integer_),
+    hs_graduate = case_when (
+      educd >= 62 ~ 1,
+      educd < 62 ~ 0,
+      TRUE ~ NA_integer_),
     hispanic = as.integer(hispand > 0),
     female = case_when(
       sex == 1 ~ 0, #men 
@@ -133,10 +142,6 @@ base_match <- base_match %>%
       citizen == 3 | citizen == 4 ~ 1, #not a citizen
       citizen == 1 | citizen == 2 ~ 0, #citizen
       TRUE ~ NA_integer_),
-    active = case_when(
-      labforce == 2 ~ 1, #in the labour market 
-      labforce == 1 ~ 0, #iinactive 
-      TRUE ~ NA_integer_),
     english = case_when (
       speakeng %in% c(2,3, 4, 5, 6) ~ 1, # 1 if they speak English
       speakeng == 1 ~ 0, # 0 if they don't
@@ -145,23 +150,20 @@ base_match <- base_match %>%
 
 #creating a new dataset with puma-level variables - IN PROGRESS
 
-puma_covs <- base_match %>% filter (post == 0) %>% #filtering for pre-treatment
-  group_by(cpuma0010) %>%
+puma_covs <- base_match %>% filter (year == 2011) %>% #filtering for pre-treatment
+  group_by(cpuma0010, statefip) %>%
   summarise(
 #weighted means for continuous variables
-    across(c (inctot, incwage),
+    across(c (density, treated, inctot, incwage),
       ~ weighted.mean(.x, w = perwt, na.rm = TRUE),
       .names = "puma_mean_{.col}"),
 #shares for binary variables
-    across (c (female, hispanic, not_citizen, active, english),
+    across (c (black, female, hispanic, hs_graduate, not_citizen, english),
       ~ weighted.mean(.x, w = perwt, na.rm = TRUE),
       .names = "puma_share_{.col}"),
     .groups = "drop")
 
-#######remaining variables to do: raced, educd, occ2010 -> shares, employed -> trend 
-#######
-
-base_match <- base_match %>% left_join (puma_covs, by = "cpuma0010")
+#######remaining variables to do: employed -> trend 
 
 #creating outcome by puma by year
 
@@ -169,18 +171,29 @@ puma_employment <- base_match %>%
   group_by (cpuma0010, year) %>% 
   summarise (puma_empl_rate = weighted.mean(employed, w = perwt, na.rm = TRUE),
              .groups = "drop")
+str(puma_employment)
 
-base_match <- base_match %>%
-  left_join(puma_employment, by = c("cpuma0010", "year"))
+employment_trend <- puma_employment %>% filter (year %in% c(2008:2011)) %>%
+  group_by(cpuma0010) %>%
+  summarise(
+    employment_trend = coef(lm(puma_empl_rate ~ year))[2],
+    .groups = "drop")
+
+puma_covs <- puma_covs %>% left_join (employment_trend, by = c("cpuma0010"))
 
 # checking that it was merged correctly (only one unique value per puma)
-base_match %>%
+puma_covs %>%
   group_by(cpuma0010) %>%
   summarise(
     n_distinct_values = n_distinct(puma_mean_inctot),
     .groups = "drop"
   ) %>%
   filter(n_distinct_values != 1)
+
+str(puma_covs)
+puma_covs %>%
+  select(where(is.numeric)) %>%
+  summarise(across(everything(), ~ sum(is.nan(.))))
 
 # save
 # saveRDS(base_match, "data/clean/base_match.rds")
