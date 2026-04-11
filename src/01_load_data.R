@@ -20,7 +20,7 @@ library(janitor)
 # 01. Import Data
 ##################################################
 
-ddi <- read_ipums_ddi("data/raw/usa_00007.xml")
+ddi <- read_ipums_ddi("data/raw/usa_00004.xml")
 data <- read_ipums_micro(ddi)
 
 data <- data %>% clean_names()
@@ -67,7 +67,7 @@ base <- base %>%
 
 # keep only relevant variables
 keep_vars <- c(
-  "year", "statefip", "countyfip", "perwt", "cpuma0010", "density", "metro",
+  "year", "statefip", "countyfip", "perwt", "puma", "cpuma0010", "density", "metro",
   "pctmetro", "met2013", "city",
   "age", "birthyr", "birthqtr", "sex", "raced", "hispand", "citizen",
   "educd", "school",
