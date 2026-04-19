@@ -11,19 +11,18 @@ Note: The datasets are too large to upload to GitHub. To run the code please dow
 On the datasets:
 
 
+
 data: Raw dataset imported from IPUMS
 
-base: Restricted to labour force participants and 2005-2019 samples; restricted to relevant variables
+base: Restricted to 16-24 year old labour force participants and 2005-2019 samples; restricted to relevant variables
 
 
 
-base\_match: Extends base dataset by adding PUMA level covariates (needed for matching) and treatment indicator.
+puma\_covs: PUMA level dataset (aggregated) of pre-treatment (2010) covariates for matching
 
 
 
-ny\_did: Restricts to target population and matched PUMAs in New York, identifies treatment and control; ready for within-NY PUMA DiD
+nyc: Restricts to target population and matched PUMAs in New York, identifies treatment and control; ready for within-NY PUMA DiD
 
-eastcoast\_did: Restricts to target population and matched PUMAs on the East Coast, identifies treatment and control; ready for multi-state PUMA DiD
-
-
+upstate: Restricts to target population and matched PUMAs on the East Coast, identifies treatment and control; ready for multi-state PUMA DiD
 

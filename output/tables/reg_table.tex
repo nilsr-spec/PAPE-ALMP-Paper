@@ -1,0 +1,32 @@
+
+\begingroup
+\centering
+\begin{tabular}{lcccccc}
+   \tabularnewline \midrule \midrule
+   Dependent Variable: & \multicolumn{6}{c}{Employment Probability}\\
+    & \multicolumn{3}{c}{Non-NYC} & \multicolumn{3}{c}{NYC} \\ 
+   Model:                         & (1)           & (2)           & (3)           & (4)           & (5)           & (6)\\  
+   \midrule
+   \emph{Variables}\\
+   Treatment Effect (DiD)         & 0.006         & 0.012         & 0.001         & 0.002         & 0.003         & 0.002\\   
+                                  & (0.013)       & (0.018)       & (0.030)       & (0.006)       & (0.008)       & (0.015)\\   
+   Age                            & 0.023$^{***}$ & 0.028$^{***}$ & 0.016$^{***}$ & 0.030$^{***}$ & 0.034$^{***}$ & 0.031$^{***}$\\   
+                                  & (0.002)       & (0.002)       & (0.003)       & (0.001)       & (0.001)       & (0.002)\\   
+   Female                         & 0.037$^{***}$ & 0.035$^{***}$ & 0.048$^{***}$ & 0.030$^{***}$ & 0.023$^{***}$ & -0.004\\   
+                                  & (0.003)       & (0.006)       & (0.008)       & (0.003)       & (0.003)       & (0.007)\\   
+   \midrule
+   \emph{Fixed-effects}\\
+   PUMA                           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes\\  
+   Year                           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes\\  
+   \midrule
+   \emph{Fit statistics}\\
+   Observations                   & 108,434       & 46,369        & 17,182        & 214,923       & 133,549       & 33,775\\  
+   Size of the 'effective' sample & 60            & 60            & 60            & 108           & 108           & 108\\  
+   R$^2$                          & 0.04643       & 0.05879       & 0.07009       & 0.05732       & 0.06408       & 0.08077\\  
+   \midrule \midrule
+   \multicolumn{7}{l}{\emph{Clustered (PUMA) standard-errors in parentheses}}\\
+   \multicolumn{7}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+\end{tabular}
+\par\endgroup
+
+
