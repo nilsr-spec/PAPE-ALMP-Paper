@@ -2,7 +2,7 @@
 # 01 - Loading ACS data + first cleaning
 # Date: 20.03.2026
 # Author: Nils
-# Date last edit: 18.04.2026
+# Date last edit: 20.04.2026
 # Author last edit: Nils
 #############################################
 
@@ -14,6 +14,7 @@
 library(ipumsr)
 library(tidyverse)
 library(janitor)
+library(cdlTools) # for fips mapping
 
 ##################################################
 # 01. Import Data
@@ -25,10 +26,10 @@ data <- read_ipums_micro(ddi)
 data <- data %>% clean_names()
 
 # for main analysis omit under 15 and over 25 year olds (if downloaded)
-base <- data %>% filter(age < 25 & age > 15)
+base <- data %>% filter(age %in% c(16:24))
 
-# only use from 2005 ACS onward (1% sample)
-base <- base %>% filter(year > 2004)
+# only use from 2005 to 2016 ACS (1% sample)
+base <- base %>% filter(year %in% c(2005:2016))
 
 # check coding of key variables
 attributes(base$empstat)
@@ -83,7 +84,7 @@ base <- base %>%
 rm(keep_vars)
 
 ##################################################
-# 01. Prepare geographic variables, treatment indicator
+# 03. Prepare geographic variables, treatment indicator
 ##################################################
 
 # count PUMA areas in New York state (123 PUMA areas in all years)
@@ -200,15 +201,39 @@ base <- base %>%
       speakeng == 1 ~ 0, # 0 don't speak English
       TRUE ~ NA_integer_),
     minority = case_when(
-      race != 1 | hispanic == 1 ~ 1,
-      race == 1 & hispanic == 0 ~ 0,
+      black == 1 | hispanic == 1 ~ 1, # black or hispanic 
+      black == 0 & hispanic == 0 ~ 0, # not black and not hispanic
       TRUE ~ NA_integer_
     )
   )
 
 ##################################################
-# 03. Save as clean base dataset
+# 04. Merge in minimum wage data
+##################################################
+
+# Read in and convert to long
+min_wages <- read.csv("data/raw/min_wages.csv") %>%
+  mutate(year = year(ymd(observation_date))) %>%
+  pivot_longer(
+    cols = starts_with("STTMINWG"),
+    names_to = "state",
+    values_to = "min_wage") %>%
+  mutate(
+    state = gsub("STTMINWG", "", state),
+    statefip = fips(state, to = "FIPS")) %>%
+  select(-c("observation_date", "state")) %>%
+  filter(year %in% c(2005:2016)) 
+
+# Merge into base dataset
+base <- base %>%
+  left_join(
+    min_wages,
+    by = c("statefip", "year"),
+    unmatched = "error")
+
+##################################################
+# 05. Save as clean base dataset
 ##################################################
 saveRDS(base, "data/clean/base.rds")
 
-rm(data, ddi)
+rm(data, ddi, min_wages)

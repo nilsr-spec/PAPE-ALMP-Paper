@@ -43,7 +43,7 @@ theme_clean <- theme_minimal(base_size = 11, base_family = "serif") +
 # define DiD function
 run_did <- function(data) {
   feols(
-    employed ~ treated:post + age + female
+    employed ~ treated*post + age + female + as.factor(race) + min_wage
     | cpuma0010 + year,
     cluster = ~cpuma0010,
     weights = ~perwt,
@@ -52,18 +52,18 @@ run_did <- function(data) {
 
 # run regressions
 did_upstate_full     <- run_did(upstate)
-did_upstate_minority <- run_did(upstate %>% filter(minority == 1))
-did_upstate_nodiploma <- run_did(upstate %>% filter(hsdiploma == 0))
+did_upstate_restricted <- run_did(upstate %>% filter(minority == 1 | hsdiploma == 0))
+# did_upstate_nodiploma <- run_did(upstate %>% filter(hsdiploma == 0))
 
 did_nyc_full         <- run_did(nyc)
-did_nyc_minority     <- run_did(nyc %>% filter(minority == 1))
-did_nyc_nodiploma    <- run_did(nyc %>% filter(hsdiploma == 0))
+did_nyc_restricted     <- run_did(nyc %>% filter(minority == 1| hsdiploma == 0))
+# did_nyc_nodiploma    <- run_did(nyc %>% filter(hsdiploma == 0))
 
 # build + export full regression table
 reg_table <- etable(
-  did_upstate_full, did_upstate_minority, did_upstate_nodiploma,
-  did_nyc_full, did_nyc_minority, did_nyc_nodiploma,
-  headers  = list("Non-NYC" = 3, "NYC" = 3),
+  did_upstate_full, did_upstate_restricted, #did_upstate_nodiploma,
+  did_nyc_full, did_nyc_restricted, #did_nyc_nodiploma,
+  headers  = list("Non-NYC" = 2, "NYC" = 2),
   coefstat = "se",
   keep     = c("%treated:post", "%age", "%female"),
   order    = c("%treated:post"),
@@ -71,6 +71,7 @@ reg_table <- etable(
                "treated:post" = "Treatment Effect (DiD)",
                "age"          = "Age",
                "female"       = "Female",
+               "min_wage"     = "Minimum Wage (State)",
                "cpuma0010"    = "PUMA",
                "year"         = "Year",
                "G"            = "Cluster" ),
@@ -82,6 +83,7 @@ reg_table <- etable(
   file     = "output/tables/reg_table.tex",
   replace  = TRUE
 )
+## NOTE: In LaTex manually 1) change model names, 2) change G to Cluster, 3) add note, 4) remove wage
 
 ##################################################
 # 02. Event-studies
@@ -90,7 +92,7 @@ reg_table <- etable(
 # define event study functions
 run_event <- function(data) {
   feols(
-    employed ~ i(rel_time, treated, ref = -1) + age + female
+    employed ~ i(rel_time, treated, ref = -1) + age + female + race + min_wage
     | cpuma0010 + year, 
     cluster = ~cpuma0010, 
     weights = ~perwt, 
@@ -186,17 +188,24 @@ nyc_pumas     <- unique(nyc$cpuma0010)
 make_balance_table <- function(puma_list, label) {
   df <- puma_covs %>%
     filter(cpuma0010 %in% puma_list)
+  
   vars <- c("lndensity", "puma_employment_trend", "puma_share_2010_employed",
             "puma_mean_2010_incwage", "puma_share_2010_black", "puma_share_2010_hsdiploma",
             "puma_share_2010_hispanic", "puma_share_2010_female", "puma_share_2010_not_citizen")
+  
   map_dfr(vars, function(v) {
     treated_vals <- df %>% filter(treated == 1) %>% pull(!!sym(v))
     control_vals <- df %>% filter(treated == 0) %>% pull(!!sym(v))
-    pval <- t.test(treated_vals, control_vals)$p.value
+    
+    pooled_sd <- sqrt((var(treated_vals, na.rm = TRUE) + var(control_vals, na.rm = TRUE)) / 2)
+    smd       <- (mean(treated_vals, na.rm = TRUE) - mean(control_vals, na.rm = TRUE)) / pooled_sd
+    pval      <- t.test(treated_vals, control_vals)$p.value
+    
     tibble(
       variable = v,
       treated  = round(mean(treated_vals, na.rm = TRUE), 3),
       control  = round(mean(control_vals, na.rm = TRUE), 3),
+      smd      = round(smd, 3),
       pval     = round(pval, 3),
       sample   = label
     )
@@ -210,12 +219,12 @@ balance_nyc     <- make_balance_table(nyc_pumas,     "NYC")
 balance_table <- bind_rows(balance_upstate, balance_nyc) %>%
   pivot_wider(
     names_from  = sample,
-    values_from = c(treated, control, pval),
+    values_from = c(treated, control, smd, pval),
     names_glue  = "{sample}_{.value}"
   ) %>%
   select(variable,
-         `Non-NYC_treated`, `Non-NYC_control`, `Non-NYC_pval`,
-         `NYC_treated`,     `NYC_control`,     `NYC_pval`) %>%
+         `Non-NYC_treated`, `Non-NYC_control`, `Non-NYC_smd`, `Non-NYC_pval`,
+         `NYC_treated`,     `NYC_control`, `NYC_smd`,  `NYC_pval`) %>%
   mutate(variable = recode(variable,
                            "lndensity"                    = "Log Density",
                            "puma_employment_trend"        = "Employment Trend",
@@ -233,11 +242,10 @@ balance_tex <- balance_table %>%
   kbl(
     format    = "latex",
     booktabs  = TRUE,
-    col.names = c("", "Treated", "Control", "p-val", "Treated", "Control", "p-val"),
-    caption   = NULL,          
-    label     = NULL,          
+    col.names = c("", "Treated", "Control", "SMD", "p-val", "Treated", "Control", "SMD", "p-val"),
+    label     = "tab_balance"
   ) %>%
-  add_header_above(c(" " = 1, "Non-NYC" = 3, "NYC" = 3))
+  add_header_above(c(" " = 1, "Non-NYC" = 4, "NYC" = 4))
 
 writeLines(balance_tex, "output/tables/tab_balance.tex")
 

@@ -1,31 +1,33 @@
 
 \begingroup
 \centering
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccc}
    \tabularnewline \midrule \midrule
-   Dependent Variable: & \multicolumn{6}{c}{Employment Probability}\\
-    & \multicolumn{3}{c}{Non-NYC} & \multicolumn{3}{c}{NYC} \\ 
-   Model:                         & (1)           & (2)           & (3)           & (4)           & (5)           & (6)\\  
+   Dependent Variable: & \multicolumn{4}{c}{Employment Probability}\\
+    & \multicolumn{2}{c}{Non-NYC} & \multicolumn{2}{c}{NYC} \\ 
+   Model:                         & (1)           & (2)           & (3)           & (4)\\  
    \midrule
    \emph{Variables}\\
-   Treatment Effect (DiD)         & 0.006         & 0.012         & 0.001         & 0.002         & 0.003         & 0.002\\   
-                                  & (0.013)       & (0.018)       & (0.030)       & (0.006)       & (0.008)       & (0.015)\\   
-   Age                            & 0.023$^{***}$ & 0.028$^{***}$ & 0.016$^{***}$ & 0.030$^{***}$ & 0.034$^{***}$ & 0.031$^{***}$\\   
-                                  & (0.002)       & (0.002)       & (0.003)       & (0.001)       & (0.001)       & (0.002)\\   
-   Female                         & 0.037$^{***}$ & 0.035$^{***}$ & 0.048$^{***}$ & 0.030$^{***}$ & 0.023$^{***}$ & -0.004\\   
-                                  & (0.003)       & (0.006)       & (0.008)       & (0.003)       & (0.003)       & (0.007)\\   
+   Treatment Effect (DiD)         & 0.005         & 0.012         & 0.007         & 0.010\\   
+                                  & (0.015)       & (0.022)       & (0.008)       & (0.011)\\   
+   Age                            & 0.026$^{***}$ & 0.027$^{***}$ & 0.033$^{***}$ & 0.035$^{***}$\\   
+                                  & (0.002)       & (0.002)       & (0.001)       & (0.001)\\   
+   Female                         & 0.040$^{***}$ & 0.038$^{***}$ & 0.030$^{***}$ & 0.018$^{***}$\\   
+                                  & (0.004)       & (0.007)       & (0.003)       & (0.004)\\   
+   Minimum Wage (State)           & 0.002         & -0.007        & -0.001        & -0.011$^{**}$\\   
+                                  & (0.006)       & (0.008)       & (0.004)       & (0.005)\\   
    \midrule
    \emph{Fixed-effects}\\
-   PUMA                           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes\\  
-   Year                           & Yes           & Yes           & Yes           & Yes           & Yes           & Yes\\  
+   PUMA                           & Yes           & Yes           & Yes           & Yes\\  
+   Year                           & Yes           & Yes           & Yes           & Yes\\  
    \midrule
    \emph{Fit statistics}\\
-   Observations                   & 108,434       & 46,369        & 17,182        & 214,923       & 133,549       & 33,775\\  
-   Size of the 'effective' sample & 60            & 60            & 60            & 108           & 108           & 108\\  
-   R$^2$                          & 0.04643       & 0.05879       & 0.07009       & 0.05732       & 0.06408       & 0.08077\\  
+   Observations                   & 91,886        & 38,381        & 176,525       & 99,282\\  
+   Size of the 'effective' sample & 60            & 60            & 108           & 108\\  
+   R$^2$                          & 0.04753       & 0.04931       & 0.05693       & 0.06169\\  
    \midrule \midrule
-   \multicolumn{7}{l}{\emph{Clustered (PUMA) standard-errors in parentheses}}\\
-   \multicolumn{7}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
+   \multicolumn{5}{l}{\emph{Clustered (PUMA) standard-errors in parentheses}}\\
+   \multicolumn{5}{l}{\emph{Signif. Codes: ***: 0.01, **: 0.05, *: 0.1}}\\
 \end{tabular}
 \par\endgroup
 

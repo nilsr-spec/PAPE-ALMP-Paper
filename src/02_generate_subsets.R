@@ -2,7 +2,7 @@
 # 02 - Create data subsets
 # Date: 07.04.2026
 # Author: Nils
-# Date last edit: 18.04.2026
+# Date last edit: 20.04.2026
 # Author last edit: Nils
 
 # Note: Please refer to the README.md for more information
@@ -45,7 +45,8 @@ puma_covs <- base %>%
       c(employed, black, hispanic, asian, minority, female, hsdiploma, not_citizen, english),
       ~ weighted.mean(.x, w = perwt, na.rm = TRUE),
       .names = "puma_share_2010_{.col}"),
-    .groups = "drop") # ungroup
+    .groups = "drop") %>% # ungroup 
+  mutate(lnpuma_mean_2010_incwage = log(puma_mean_2010_incwage))
 
 # creating pre-treatment outcome trends by puma 
 puma_employment_trend <- base %>%

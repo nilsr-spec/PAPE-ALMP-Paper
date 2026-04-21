@@ -2,7 +2,7 @@
 # 03 - Matching
 # Date: 07.04.2026
 # Author: Nils
-# Date last edit: 19.04.2026
+# Date last edit: 20.04.2026
 # Author last edit: Nils
 #############################################
 
@@ -32,7 +32,7 @@ upstate_matches <- puma_covs %>%
 
 # perform matching (nearest-neighbours)
 match_out_upstate <- matchit(
-  treated ~ lndensity + puma_employment_trend + puma_share_2010_minority + puma_share_2010_hsdiploma,
+  treated ~ lndensity + puma_employment_trend + lnpuma_mean_2010_incwage + puma_share_2010_minority + puma_share_2010_hsdiploma,
   data = upstate_matches,
   method = "nearest",
   distance = "mahalanobis",
@@ -64,7 +64,7 @@ nyc_matches <- puma_covs %>%
 
 # perform matching (nearest-neighbor)
 match_out_nyc <- matchit(
-  treated ~ lndensity + puma_employment_trend + puma_share_2010_minority + puma_share_2010_hsdiploma,
+  treated ~ lndensity + puma_employment_trend + lnpuma_mean_2010_incwage + puma_share_2010_minority + puma_share_2010_hsdiploma,
   data = nyc_matches,
   method = "nearest",
   distance = "mahalanobis",
@@ -83,4 +83,3 @@ nyc <- base %>%
 
 # save
 saveRDS(nyc, "data/clean/nyc.rds")
-
