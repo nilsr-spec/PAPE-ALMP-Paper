@@ -5,15 +5,20 @@
 \cmidrule(l{3pt}r{3pt}){2-5} \cmidrule(l{3pt}r{3pt}){6-9}
  & Treated & Control & SMD & p-val & Treated & Control & SMD & p-val\\
 \midrule
-Log Density & 8.721 & 8.578 & 0.181 & 0.508 & 10.777 & 9.710 & 1.967 & 0.000\\
-Employment Trend & -0.001 & -0.001 & -0.013 & 0.966 & -0.009 & -0.005 & -0.092 & 0.632\\
-Employment Rate (2010) & 0.804 & 0.801 & 0.051 & 0.869 & 0.763 & 0.790 & -0.326 & 0.094\\
-Mean Wage (2010) & 10911.273 & 11255.255 & -0.169 & 0.602 & 14578.903 & 13263.100 & 0.250 & 0.197\\
-Share Black & 0.210 & 0.224 & -0.086 & 0.758 & 0.256 & 0.110 & 0.741 & 0.000\\
-\addlinespace
-Share HS Diploma & 0.849 & 0.843 & 0.099 & 0.748 & 0.829 & 0.826 & 0.028 & 0.884\\
-Share Hispanic & 0.215 & 0.162 & 0.368 & 0.234 & 0.333 & 0.400 & -0.302 & 0.120\\
-Share Female & 0.477 & 0.505 & -0.435 & 0.169 & 0.505 & 0.486 & 0.270 & 0.164\\
-Share Non-Citizen & 0.096 & 0.086 & 0.131 & 0.651 & 0.176 & 0.183 & -0.057 & 0.767\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Matching Variables}}\\
+\hspace{1em}Log Density & 8.721 & 8.578 & 0.181 & 0.508 & 10.777 & 9.710 & 1.967 & 0.000\\
+\hspace{1em}Employment Trend & -0.001 & -0.001 & -0.013 & 0.966 & -0.009 & -0.005 & -0.092 & 0.632\\
+\hspace{1em}Log Wage Income (2010) & 9.275 & 9.317 & -0.217 & 0.508 & 9.529 & 9.453 & 0.256 & 0.186\\
+\hspace{1em}Share Minority & 0.419 & 0.376 & 0.217 & 0.460 & 0.560 & 0.504 & 0.203 & 0.294\\
+\hspace{1em}Share HS Diploma & 0.849 & 0.843 & 0.099 & 0.748 & 0.829 & 0.826 & 0.028 & 0.884\\
+\addlinespace[0.3em]
+\multicolumn{9}{l}{\textbf{Additional Covariates}}\\
+\hspace{1em}Employment Rate (2010) & 0.804 & 0.801 & 0.051 & 0.869 & 0.763 & 0.790 & -0.326 & 0.094\\
+\hspace{1em}Share Black & 0.210 & 0.224 & -0.086 & 0.758 & 0.256 & 0.110 & 0.741 & 0.000\\
+\hspace{1em}Share Hispanic & 0.215 & 0.162 & 0.368 & 0.234 & 0.333 & 0.400 & -0.302 & 0.120\\
+\hspace{1em}Share Female & 0.477 & 0.505 & -0.435 & 0.169 & 0.505 & 0.486 & 0.270 & 0.164\\
+\hspace{1em}Share Non-Citizen & 0.096 & 0.086 & 0.131 & 0.651 & 0.176 & 0.183 & -0.057 & 0.767\\
 \bottomrule
+\multicolumn{9}{l}{\rule{0pt}{1em}\textit{Note:} Matching performed on log density, log mean wage income, employment trend, minority share and HS diploma share. Black and Hispanic shares reported separately for transparency.}\\
 \end{tabular}

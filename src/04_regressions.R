@@ -43,7 +43,7 @@ theme_clean <- theme_minimal(base_size = 11, base_family = "serif") +
 # define DiD function
 run_did <- function(data) {
   feols(
-    employed ~ treated*post + age + female + as.factor(race) + min_wage
+    employed ~ treated:post + age + female + as.factor(race) + min_wage
     | cpuma0010 + year,
     cluster = ~cpuma0010,
     weights = ~perwt,
@@ -100,15 +100,32 @@ run_event <- function(data) {
 } 
 
 # run event studies
-event_upstate_full     <- run_event(upstate)
-event_upstate_minority <- run_event(upstate %>% filter(minority == 1))
+event_upstate_full       <- run_event(upstate)
+event_upstate_restricted <- run_event(upstate %>% filter(minority == 1 | hsdiploma == 0))
 
-event_nyc_full         <- run_event(nyc)
-event_nyc_minority     <- run_event(nyc %>% filter(minority == 1))
+event_nyc_full           <- run_event(nyc)
+event_nyc_restricted     <- run_event(nyc %>% filter(minority == 1 | hsdiploma == 0))
+
+# test for joint significance 2005-2010 (full)
+pre_coefs <- c("rel_time::-7:treated", "rel_time::-6:treated", "rel_time::-5:treated",
+               "rel_time::-4:treated", "rel_time::-3:treated", "rel_time::-2:treated")
+
+wald(event_upstate_full,     pre_coefs)
+wald(event_upstate_restricted, pre_coefs)
+wald(event_nyc_full,         pre_coefs)
+wald(event_nyc_restricted,     pre_coefs)
+
+# test for joint significance 2008-2010 (relevant pre-treatment window)
+pre_coefs <- c("rel_time::-4:treated", "rel_time::-3:treated", "rel_time::-2:treated")
+
+wald(event_upstate_full,     pre_coefs)
+wald(event_upstate_restricted, pre_coefs)
+wald(event_nyc_full,         pre_coefs)
+wald(event_nyc_restricted,     pre_coefs)
 
 # plot event-studies
 plot_event_upstate <- ggiplot(
-  list("Full" = event_upstate_full, "Minority" = event_upstate_minority),
+  list("Full" = event_upstate_full, "Restricted" = event_upstate_restricted),
   main  = "Event Study: Non-NYC",
   xlab  = "Years relative to treatment",
   ylab  = "Effect on employment rate",
@@ -117,12 +134,12 @@ plot_event_upstate <- ggiplot(
   geom_errorbar(position = position_dodge(width = 0.4), width = 0.15, linewidth = 0.4) +
   geom_point(position   = position_dodge(width = 0.4), size = 1.5) +
   geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
-  scale_colour_manual(values = c("Full" = "grey20", "Minority" = "grey65")) +
-  scale_fill_manual(values  = c("Full" = "grey20", "Minority" = "grey65")) +
+  scale_colour_manual(values = c("Full" = "grey20", "Restricted" = "grey65")) +
+  scale_fill_manual(values  = c("Full" = "grey20", "Restricted" = "grey65")) +
   theme_clean
 
 plot_event_nyc <- ggiplot(
-  list("Full" = event_nyc_full, "Minority" = event_nyc_minority),
+  list("Full" = event_nyc_full, "Restricted" = event_nyc_restricted),
   main  = "Event Study: NYC",
   xlab  = "Years relative to treatment",
   ylab  = "Effect on employment rate",
@@ -131,8 +148,8 @@ plot_event_nyc <- ggiplot(
   geom_errorbar(position = position_dodge(width = 0.4), width = 0.15, linewidth = 0.4) +
   geom_point(position   = position_dodge(width = 0.4), size = 1.5) +
   geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
-  scale_colour_manual(values = c("Full" = "grey20", "Minority" = "grey65")) +
-  scale_fill_manual(values  = c("Full" = "grey20", "Minority" = "grey65")) +
+  scale_colour_manual(values = c("Full" = "grey20", "Restricted" = "grey65")) +
+  scale_fill_manual(values  = c("Full" = "grey20", "Restricted" = "grey65")) +
   theme_clean
 
 # save
@@ -189,9 +206,14 @@ make_balance_table <- function(puma_list, label) {
   df <- puma_covs %>%
     filter(cpuma0010 %in% puma_list)
   
-  vars <- c("lndensity", "puma_employment_trend", "puma_share_2010_employed",
-            "puma_mean_2010_incwage", "puma_share_2010_black", "puma_share_2010_hsdiploma",
-            "puma_share_2010_hispanic", "puma_share_2010_female", "puma_share_2010_not_citizen")
+  # define variable order with separator
+  matching_vars <- c("lndensity", "puma_employment_trend", "lnpuma_mean_2010_incwage",
+                     "puma_share_2010_minority", "puma_share_2010_hsdiploma")
+  additional_vars <- c("puma_share_2010_employed",
+                       "puma_share_2010_black", "puma_share_2010_hispanic",
+                       "puma_share_2010_female", "puma_share_2010_not_citizen")
+  
+  vars <- c(matching_vars, additional_vars)
   
   map_dfr(vars, function(v) {
     treated_vals <- df %>% filter(treated == 1) %>% pull(!!sym(v))
@@ -226,15 +248,16 @@ balance_table <- bind_rows(balance_upstate, balance_nyc) %>%
          `Non-NYC_treated`, `Non-NYC_control`, `Non-NYC_smd`, `Non-NYC_pval`,
          `NYC_treated`,     `NYC_control`, `NYC_smd`,  `NYC_pval`) %>%
   mutate(variable = recode(variable,
-                           "lndensity"                    = "Log Density",
-                           "puma_employment_trend"        = "Employment Trend",
-                           "puma_share_2010_employed"     = "Employment Rate (2010)",
-                           "puma_mean_2010_incwage"       = "Mean Wage (2010)",
-                           "puma_share_2010_black"        = "Share Black",
-                           "puma_share_2010_hsdiploma"    = "Share HS Diploma",
-                           "puma_share_2010_hispanic"     = "Share Hispanic",
-                           "puma_share_2010_female"       = "Share Female",
-                           "puma_share_2010_not_citizen"  = "Share Non-Citizen"
+                           "lndensity"                   = "Log Density",
+                           "puma_employment_trend"       = "Employment Trend",
+                           "puma_share_2010_minority"    = "Share Minority",  # matched variable
+                           "puma_share_2010_hsdiploma"   = "Share HS Diploma",
+                           "lnpuma_mean_2010_incwage"     = "Log Wage Income (2010)",
+                           "puma_share_2010_employed"    = "Employment Rate (2010)",
+                           "puma_share_2010_black"       = "Share Black",
+                           "puma_share_2010_hispanic"    = "Share Hispanic",
+                           "puma_share_2010_female"      = "Share Female",
+                           "puma_share_2010_not_citizen" = "Share Non-Citizen"
   ))
 
 # convert to kable for latex export
@@ -242,12 +265,19 @@ balance_tex <- balance_table %>%
   kbl(
     format    = "latex",
     booktabs  = TRUE,
-    col.names = c("", "Treated", "Control", "SMD", "p-val", "Treated", "Control", "SMD", "p-val"),
+    col.names = c("", "Treated", "Control", "SMD", "p-val", 
+                  "Treated", "Control", "SMD", "p-val"),
     label     = "tab_balance"
   ) %>%
-  add_header_above(c(" " = 1, "Non-NYC" = 4, "NYC" = 4))
+  add_header_above(c(" " = 1, "Non-NYC" = 4, "NYC" = 4)) %>%
+  pack_rows("Matching Variables", 1, 5) %>%          
+  pack_rows("Additional Covariates", 6, 10) %>%      
+  footnote(general = "Matching performed on log density, log mean wage income, employment trend, minority share and HS diploma share. Black and Hispanic shares reported separately for transparency.",
+           general_title = "Note:",
+           footnote_as_chunk = TRUE)
 
 writeLines(balance_tex, "output/tables/tab_balance.tex")
+## Note: In LaTeX replace / reformat footnote
 
 ##################################################
 # 05. Covariate stability over time
@@ -268,6 +298,8 @@ make_stability_table <- function(data, label) {
       group  = ifelse(treated == 1, "Treated", "Control"),
       sample = label
     ) %>%
+    mutate(post = factor(post, levels = c(0, 1), labels = c("Pre", "Post"))
+    ) %>%
     select(sample, post, group, everything(), -treated)
 }
 
@@ -279,7 +311,7 @@ stability_table <- bind_rows(stability_upstate, stability_nyc) %>%
   arrange(sample, group, post) %>%
   rename(
     "Sample"          = sample,
-    "Post"            = post,
+    "Period"          = post,
     "Group"           = group,
     "Share Minority"  = share_minority,
     "Share HS-Diploma"= share_diploma,
@@ -298,3 +330,17 @@ stability_tex <- stability_table %>%
   )
 
 writeLines(stability_tex, "output/tables/tab_stability.tex")
+
+##################################################
+# z. Additionally: treated population by year
+##################################################
+
+nyc %>%
+  filter(treated == 1) %>%
+  group_by(year) %>%
+  summarise(pop = sum(perwt))
+
+upstate %>%
+  filter(treated == 1) %>%
+  group_by(year) %>%
+  summarise(pop = sum(perwt))
